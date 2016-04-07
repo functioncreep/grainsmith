@@ -21,9 +21,10 @@ b = Buffer.read(s, sample2);
 (
 SynthDef(\granFile,
 	{ arg  trate = 500, buff = b, outBus, playrate = 1, vol = 0.2, spray = 0.5, dur = 0.5, pos, clk, pan;
+		var place;
     	clk = Impulse.kr(trate); // make 'Dust' the trigger
 		pan = TRand.kr(-1.0,1.0,clk); // random panning
-		pos = MouseX.kr(0,BufDur.kr(b)) + TRand.kr(0, spray, clk); // adjust position + random "spray"
+		place = pos + TRand.kr(0, spray, clk);
 		Out.ar([0,1],{ // stereo output bus
 			TGrains.ar(2, clk, buff, playrate, pos, dur, pan, vol);
 			}
@@ -61,7 +62,13 @@ MIDIFunc.cc({arg val;x.set(\trate,(val/127)*495+5)},5);
 
 // Quneo test...
 
-MIDIFunc.cc({arg val;x.set(\pos,((val/127)*(b.numFrames*44100))},10);
+MIDIFunc.cc({arg val;x.set(\pos,(val/127)*(a.numFrames/a.sampleRate))},10);
+
+MIDIFunc.cc({arg val;x.set(\vol,(val/127))},6);
+
+MIDIFunc.cc({arg val;x.set(\trate,(val/127)*495+5)},0);
+
+MIDIFunc.cc({arg val;x.set(\spray,rrand(0,(val/127)*0.90+0.1))},3);
 
 ControlSpec
 
