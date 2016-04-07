@@ -6,8 +6,18 @@ s.boot;
 
 s.quit;
 
-b = Buffer.read(s, "/home/clacktron/SuperCollider/grainysmith/readingrainbow_mono.wav");
-c = Buffer.read(s, "/home/clacktron/SuperCollider/grainysmith/amberaaa_2_mono.wav");
+(
+var sample1, sample2, sample3, sample4;
+sample1 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
+sample2 = thisProcess.nowExecutingPath.dirname +/+ "sounds/amberaaa_2_mono.wav";
+// sample3 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
+// sample4 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
+
+a = Buffer.read(s, sample1);
+b = Buffer.read(s, sample2);
+// c = Buffer.read(s, sample3);
+// d = Buffer.read(s, sample4);
+)
 
 // create synth 'recipe'
 (
@@ -24,15 +34,14 @@ SynthDef(\granFile,
 
 	}
 ).add;
-
-
 )
 
 MIDIClient.init;
 
-(
-x = Synth(\granFile, [\buff, b]); s.scope(2); // play synth
+x = Synth(\granFile, [\buff, a]); s.scope(2); // play synth
+y = Synth(\granFile, [\buff, b]);
 
+(
 // MIDI
 
 MIDIFunc.cc({arg val;x.set(\vol,(val/127))},1);
@@ -45,4 +54,3 @@ MIDIFunc.cc({arg val;x.set(\dur,(val/127)*0.49+0.01)},4);
 
 MIDIFunc.cc({arg val;x.set(\trate,(val/127)*495+5)},5);
 )
-
