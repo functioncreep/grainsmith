@@ -6,41 +6,41 @@ MIDIClient.init;
 s.boot;
 
 (
-var sample1, sample2, sample3, sample4;
-sample1 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
-sample2 = thisProcess.nowExecutingPath.dirname +/+ "sounds/amberaaa_2_mono.wav";
-// sample3 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
-// sample4 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
-
-a = Buffer.read(s, sample1);
-b = Buffer.read(s, sample2);
-// c = Buffer.read(s, sample3);
-// d = Buffer.read(s, sample4);
-)
+~chans = 2; // How many channels?
+~sample1 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav");
+~sample2 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/amberaaa_2_mono.wav");
 
 // create synth 'recipe'
-(
-SynthDef(\granFile,
-	{ | trate = 600, buff, outBus, playrate = 1, amp = 0.2, spray = 0.5, dur = 0.5, pos = 0 |
-    	var clk, place, pan;
-		clk = Impulse.kr(trate); // make 'Impulse' the trigger
-		pan = TRand.kr(-1.0,1.0,clk); // random panning
-		place = (pos.lag(3) + TRand.kr(0, spray, clk));
-		Out.ar([0,1],{ // stereo output bus
-			TGrains.ar(2, clk, buff, playrate, place, dur, pan, amp);
-			}
-		)
 
+SynthDef(\granFile,
+	{ arg
+		trate = 600,
+		buff = (~sample1),
+		playrate = 1,
+		amp = 0.2,
+		spray = 0.5,
+		dur = 0.5,
+		pos = 0;
+
+		var outs = Array.series(~chans,0,1);
+		var clk = Impulse.kr(trate); // make 'Impulse' the trigger
+		var pan = TRand.kr(-1.0,1.0,clk); // random panning
+		var place = (pos.lag(3) + TRand.kr(0, spray, clk));
+		var grains = TGrains.ar(~chans, clk, buff, playrate, place, dur, pan, amp);
+
+		Out.ar(outs,{ grains })
 	}
 ).add;
-)
 
-x = Synth(\granFile, [\buff, a]); s.scope(2); // play synth
+// play synth
+
+x = Synth(\granFile); s.scope(~chans);
+)
 
 (
 // Quneo test...
 
-~posSpec = [0,(a.numFrames/a.sampleRate),\lin].asSpec;
+~posSpec = [0,(~sample1.numFrames/~sample1.sampleRate),\lin].asSpec;
 ~ampSpec = [0.01, 0.6, \exp ].asSpec;
 ~rateSpec = [2,600,\exp].asSpec;
 ~spraySpec = [0.01, 2,\lin].asSpec;
