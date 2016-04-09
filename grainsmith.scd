@@ -46,15 +46,7 @@ SynthDef(\granFile, { arg
 
 MIDIFunc.cc({arg val;
 	~grains.do({ |i|
-		i.set(\pos,val.linlin(0,127,0,(~sample.numFrames/~sample.sampleRate)))})},10);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\amp,val.linexp(0,127,0.001,0.9))})},6);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\trate,val.linexp(0,127,2,600))})},0);
+		i.set(\trate,val.linexp(0,127,0.5,600))})},0);
 
 MIDIFunc.cc({arg val;
 	~grains.do({ |i|
@@ -62,11 +54,23 @@ MIDIFunc.cc({arg val;
 
 MIDIFunc.cc({arg val;
 	~grains.do({ |i|
-		i.set(\spray,val.linlin(0,127,0.01,2))})},2);
+		i.set(\spray,val.linexp(0,127,0.01,2))})},2);
+
+MIDIFunc.cc({arg val;
+	~grains.do({ |i|
+		i.set(\playrate,val.linlin(0,127,0.25,1.25))})},3);
 
 MIDIFunc.cc({arg val;
 	~grains.do({ |i|
 		i.set(\az,val.linlin(0,127,-1.0,1.0))})},5);
+
+MIDIFunc.cc({arg val;
+	~grains.do({ |i|
+		i.set(\amp,val.linexp(0,127,0.001,0.9))})},6);
+
+MIDIFunc.cc({arg val;
+	~grains.do({ |i|
+		i.set(\pos,val.linlin(0,127,0,(~sample.numFrames/~sample.sampleRate)))})},10);
 
 MIDIFunc.cc({arg val;
 	~grains.do({ |i|
