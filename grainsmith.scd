@@ -1,77 +1,120 @@
-// --- Granulator Mk I ---
+// --- Granulator Mk II ---
 
-// boot the server and read soundfile into buffer
 
 MIDIClient.init;
+MIDIIn.connectAll;
+~quneo = MIDIOut(0);
+~quneo.connect(5);
+MIDIEndPoint.list;
+MIDIClient.destinations.do{ |it,i| [i,it].postln; }
+
+
 s.boot;
 
 (
-var sample1, sample2, sample3, sample4;
-sample1 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
-sample2 = thisProcess.nowExecutingPath.dirname +/+ "sounds/amberaaa_2_mono.wav";
-// sample3 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
-// sample4 = thisProcess.nowExecutingPath.dirname +/+ "sounds/readingrainbow_mono.wav";
-
-a = Buffer.read(s, sample1);
-b = Buffer.read(s, sample2);
-// c = Buffer.read(s, sample3);
-// d = Buffer.read(s, sample4);
+~chans = 2; // How many channels?
+~sample1 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/sadloop_mono.wav");
+~sample2 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/celloloop_mono.wav");
+~grainsynth1 = IdentityBag.new;
+~grainsynth2 = IdentityBag.new;
+~gnum = 50;
 )
 
 // create synth 'recipe'
-(
-SynthDef(\granFile,
-	{ | trate = 600, buff, outBus, playrate = 1, amp = 0.2, spray = 0.5, dur = 0.5, pos = 0 |
-    	var clk, place, pan;
-		clk = Impulse.kr(trate); // make 'Impulse' the trigger
-		pan = TRand.kr(-1.0,1.0,clk); // random panning
-		place = (pos.lag(3) + TRand.kr(0, spray, clk));
-		Out.ar([0,1],{ // stereo output bus
-			TGrains.ar(2, clk, buff, playrate, place, dur, pan, amp);
-			}
-		)
 
+(
+SynthDef(\granFile, { arg
+	trate = 50,
+	buff = 0,
+	playrate = 1,
+	amp = 0.5,
+	spray = 0.5,
+	dur = 1,
+	pos = 0,
+	az = 0,
+	width = 1;
+
+	var outs = Array.series(~chans,0,1);
+	var clk = Dust.kr(trate); // make 'Impulse' the trigger
+	var pan = az + TRand.kr( width.neg, width, clk ); // random panning
+	var place = (pos.lag(3) + TRand.kr(0, spray, clk));
+	var grains = TGrains.ar(~chans, clk, buff, playrate, place, dur/trate, pan, amp/~gnum);
+
+	Out.ar(outs,{ grains })
 	}
 ).add;
 )
 
-x = Synth(\granFile, [\buff, a]); s.scope(2); // play synth
+// play synth
 
 (
-// Quneo test...
-
-~posSpec = [0,(a.numFrames/a.sampleRate),\lin].asSpec;
-~ampSpec = [0.01, 0.6, \exp ].asSpec;
-~rateSpec = [2,600,\exp].asSpec;
-~spraySpec = [0.01, 2,\lin].asSpec;
-
-MIDIFunc.cc({arg val;x.set(\pos,~posSpec.map(val/127));},10);
-
-MIDIFunc.cc({arg val;x.set(\amp,~ampSpec.map(val/127))},6);
-
-MIDIFunc.cc({arg val;x.set(\trate,~rateSpec.map(val/127))},0);
-
-MIDIFunc.cc({arg val;x.set(\spray,~spraySpec.map(val/127))},11);
+~gnum.do({~grainsynth1.add(Synth(\granFile, [\buff, ~sample1]))});
+~gnum.do({~grainsynth2.add(Synth(\granFile, [\buff, ~sample2]))});
 )
 
-/* ...rotary test. not working.
+
+// Quneo Controls ------------------------------------------------
 
 (
-var newval = 0, lastval = 0;
+var currsynth = ~grainsynth1;
+var currbuff = ~sample1;
 
-MIDIFunc.cc({ arg val;
-	lastval = newval;
-	newval = val;
-	if (newval > lastval,
-		{"forward".postln;
-			~bufPos = ~bufPos + 1;
-			x.set(\pos, ~bufPos)}
-	);
-	if (newval < lastval,
-		{"backwards".postln}
-	);
+MIDIFunc.noteOn({ |val,note|
+	switch(note,
+		80, {
+			"SAMPLE 1".postln;
+			currsynth = ~grainsynth1;
+			currbuff = ~sample1;
+			~quneo.noteOn(0,24,60);
 
-}, 5, 0, 8388608 )
+			[26,28,30].do({ arg item; ~quneo.noteOff(0,item)});
+		},
+		81, {
+			"SAMPLE 2".postln;
+			currsynth = ~grainsynth2;
+			currbuff = ~sample2;
+
+			~quneo.noteOn(0,26,60);
+			[24,28,30].do({ arg item; ~quneo.noteOff(0,item)});
+		}
+	);
+});
+
+MIDIFunc.cc({arg val;
+	currsynth.do({ |i|
+		i.set(\pos,val.linlin(0,127,0,(currbuff.numFrames/currbuff.sampleRate)))})},10);
+
+MIDIFunc.cc({arg val;
+	currsynth.do({ |i|
+		i.set(\amp,val.linexp(0,127,0.001,0.9))})},6);
+
+MIDIFunc.cc({arg val;
+	currsynth.do({ |i|
+		i.set(\trate,val.linexp(0,127,2,600))})},0);
+
+MIDIFunc.cc({arg val;
+	currsynth.do({ |i|
+		i.set(\dur,val.linexp(0,127,0.1,1))})},1);
+
+MIDIFunc.cc({arg val;
+	currsynth.do({ |i|
+		i.set(\spray,val.linexp(0,127,0.01,2))})},2);
+
+MIDIFunc.cc({arg val;
+	currsynth.do({ |i|
+		i.set(\az,val.linlin(0,127,-1.0,1.0))})},5);
+
+MIDIFunc.cc({arg val;
+	currsynth.do({ |i|
+		i.set(\width,val.linlin(0,127,0,1))})},11);
 )
 
-*/
+// ---------------------------------------------------------------
+
+
+MIDIFunc.trace(false);
+
+~quneo.noteOn(0,24,64);
+for(0,32,{|i|~quneo.noteOff(0,i)});
+
+MIDIFunc.trace;
