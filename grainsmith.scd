@@ -8,12 +8,11 @@ MIDIIn.connectAll;
 MIDIEndPoint.list;
 MIDIClient.destinations.do{ |it,i| [i,it].postln; }
 
-
 s.boot;
 
 (
 ~chans = 2; // How many channels?
-~sample1 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/sadloop_mono.wav");
+~sample1 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/dialogue.wav");
 ~sample2 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/celloloop_mono.wav");
 ~grainsynth1 = IdentityBag.new;
 ~grainsynth2 = IdentityBag.new;
@@ -27,7 +26,7 @@ SynthDef(\granFile, { arg
 	trate = 50,
 	buff = 0,
 	playrate = 1,
-	amp = 0.5,
+	amp = 0.7,
 	spray = 0.5,
 	dur = 1,
 	pos = 0,
@@ -61,7 +60,7 @@ var currbuff = ~sample1;
 
 MIDIFunc.noteOn({ |val,note|
 	switch(note,
-		80, {
+		12, {
 			"SAMPLE 1".postln;
 			currsynth = ~grainsynth1;
 			currbuff = ~sample1;
@@ -69,7 +68,7 @@ MIDIFunc.noteOn({ |val,note|
 
 			[26,28,30].do({ arg item; ~quneo.noteOff(0,item)});
 		},
-		81, {
+		13, {
 			"SAMPLE 2".postln;
 			currsynth = ~grainsynth2;
 			currbuff = ~sample2;
@@ -86,7 +85,7 @@ MIDIFunc.cc({arg val;
 
 MIDIFunc.cc({arg val;
 	currsynth.do({ |i|
-		i.set(\amp,val.linexp(0,127,0.001,0.9))})},6);
+		i.set(\amp,val.linexp(0,127,0.001,1.0))})},6);
 
 MIDIFunc.cc({arg val;
 	currsynth.do({ |i|
@@ -102,19 +101,14 @@ MIDIFunc.cc({arg val;
 
 MIDIFunc.cc({arg val;
 	currsynth.do({ |i|
-		i.set(\az,val.linlin(0,127,-1.0,1.0))})},5);
+		i.set(\width,val.linlin(0,127,0.001,1.0))})},3);
 
 MIDIFunc.cc({arg val;
 	currsynth.do({ |i|
-		i.set(\width,val.linlin(0,127,0,1))})},11);
+		i.set(\az,val.linlin(0,127,-1.0,1.0))})},5);
 )
 
 // ---------------------------------------------------------------
 
-
-MIDIFunc.trace(false);
-
 ~quneo.noteOn(0,24,64);
 for(0,32,{|i|~quneo.noteOff(0,i)});
-
-MIDIFunc.trace;
