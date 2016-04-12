@@ -13,7 +13,7 @@ s.boot;
 (
 ~chans = 2; // How many channels?
 ~sample1 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/dialogue.wav");
-~sample2 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/celloloop_mono.wav");
+~sample2 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/dialogue.wav");
 ~grainsynth1 = IdentityBag.new;
 ~grainsynth2 = IdentityBag.new;
 ~gnum = 50;
@@ -128,6 +128,10 @@ MIDIFunc.cc({arg val;
 MIDIFunc.cc({arg val;
 	currsynth.do({ |i|
 		i.set(\az,val.linlin(0,127,-1.0,1.0))})},5);
+
+MIDIFunc.cc({arg val;
+	currsynth.do({ |i|
+		i.set(\playrate,val.linlin(0,127,0.5,1.5))})},9);
 
 MIDIFunc.noteOn({
 	~gnum.do({
