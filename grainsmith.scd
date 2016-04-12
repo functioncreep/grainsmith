@@ -4,14 +4,14 @@
 MIDIClient.init;
 MIDIIn.connectAll;
 ~quneo = MIDIOut(0);
-~quneo.connect(5);
-MIDIEndPoint.list;
+~quneo.connect(1);
+
 MIDIClient.destinations.do{ |it,i| [i,it].postln; }
 
 s.boot;
 
 (
-~chans = 2; // How many channels?
+~chans = 5; // How many channels?
 ~sample1 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/dialogue.wav");
 ~sample2 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/celloloop_mono.wav");
 ~grainsynth1 = IdentityBag.new;
@@ -47,16 +47,37 @@ SynthDef(\granFile, { arg
 // play synth
 
 (
-~gnum.do({~grainsynth1.add(Synth(\granFile, [\buff, ~sample1]))});
-~gnum.do({~grainsynth2.add(Synth(\granFile, [\buff, ~sample2]))});
-)
+var currsynth = ~grainsynth2;
+var currbuff = ~sample2;
 
+~gnum.do({
+	~grainsynth1.add(
+		Synth(\granFile, [
+			\buff, ~sample1,
+			\amp, 0.0,
+			\trate, 100,
+			\az, 0.0,
+			\spray, 0.1,
+			\dur, 1.0,
+			\width, 1.0,
+		])
+	)
+});
+~gnum.do({
+	~grainsynth2.add(
+		Synth(\granFile, [
+			\buff, ~sample2,
+			\amp, 0,
+			\trate, 100,
+			\az, 1,
+			\spray, 0.1,
+			\dur, 1.0,
+			\width, 0.0,
+		])
+	)
+});
 
 // Quneo Controls ------------------------------------------------
-
-(
-var currsynth = ~grainsynth1;
-var currbuff = ~sample1;
 
 MIDIFunc.noteOn({ |val,note|
 	switch(note,
@@ -65,14 +86,12 @@ MIDIFunc.noteOn({ |val,note|
 			currsynth = ~grainsynth1;
 			currbuff = ~sample1;
 			~quneo.noteOn(0,24,60);
-
 			[26,28,30].do({ arg item; ~quneo.noteOff(0,item)});
 		},
 		13, {
 			"SAMPLE 2".postln;
 			currsynth = ~grainsynth2;
 			currbuff = ~sample2;
-
 			~quneo.noteOn(0,26,60);
 			[24,28,30].do({ arg item; ~quneo.noteOff(0,item)});
 		}
@@ -112,3 +131,5 @@ MIDIFunc.cc({arg val;
 
 ~quneo.noteOn(0,24,64);
 for(0,32,{|i|~quneo.noteOff(0,i)});
+
+~quneo.noteOn(0,4,60);
