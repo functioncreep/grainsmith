@@ -1,34 +1,15 @@
 // --- Granulator Mk II ---
-<<<<<<< HEAD
-=======
 
->>>>>>> quneo-support
 
-(
 MIDIClient.init;
 MIDIIn.connectAll;
-<<<<<<< HEAD
-=======
 ~quneo = MIDIOut(0);
 ~quneo.connect(17);
 
 MIDIClient.destinations.do{ |it,i| [i,it].postln; }
->>>>>>> quneo-support
 
 s.boot;
-s.doWhenBooted({(
 
-~chans = 2; // How many channels?
-~sample = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/amberaaa_2_mono.wav");
-~grains = IdentityBag.new;
-~gnum = 50;
-
-
-<<<<<<< HEAD
-
-// create synth 'recipe'
-
-=======
 (
 ~chans = 2; // How many channels?
 ~sample1 = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "sounds/dialogue.wav");
@@ -41,16 +22,11 @@ s.doWhenBooted({(
 // create synth 'recipe'
 
 (
->>>>>>> quneo-support
 SynthDef(\granFile, { arg
 	trate = 50,
 	buff = 0,
 	playrate = 1,
-<<<<<<< HEAD
-	amp = 0.5,
-=======
 	amp = 0.7,
->>>>>>> quneo-support
 	spray = 0.5,
 	dur = 1,
 	pos = 0,
@@ -66,52 +42,10 @@ SynthDef(\granFile, { arg
 	Out.ar(outs,{ grains })
 	}
 ).add;
+)
 
 // play synth
 
-<<<<<<< HEAD
-~gnum.do({~grains.add(Synth(\granFile, [\buff, ~sample]))});
-
-
-// Quneo Controls ------------------------------------------------
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\trate,val.linexp(0,127,0.5,600))})},0);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\dur,val.linexp(0,127,0.1,1))})},1);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\spray,val.linexp(0,127,0.01,2))})},2);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\playrate,val.linlin(0,127,0.25,1.25))})},3);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\az,val.linlin(0,127,-1.0,1.0))})},5);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\amp,val.linexp(0,127,0.001,0.9))})},6);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\pos,val.linlin(0,127,0,(~sample.numFrames/~sample.sampleRate)))})},10);
-
-MIDIFunc.cc({arg val;
-	~grains.do({ |i|
-		i.set(\width,val.linlin(0,127,0,1))})},11);
-
-// ---------------------------------------------------------------
-
-)})
-)
-=======
 (
 ~gnum.do({
 	~grainsynth1.add(
@@ -238,4 +172,3 @@ for(0,32,{|i|~quneo.noteOff(0,i)});
 ~quneo.noteOn(0,4,60);
 
 	MIDIFunc.trace;
->>>>>>> quneo-support
